@@ -48,12 +48,26 @@ class RestInPlaceEditor
     updateRequest.fail (jqXHR, textStatus) =>
       if (jqXHR.status == 200 && textStatus == "parsererror")
         @loadViaGET()
+      if (jqXHR.status == 422)
+          @abort()
+          @showErrors(jqXHR.responseText)
       else
         @$element.trigger('failure.rest-in-place')
         @abort()
         
     @$element.html("saving...")
-  
+
+  showErrors : (data) ->
+      @$element.append('<div class="errors">' + @formatErrors($.parseJSON(data).errors) +  '</div>');
+      setTimeout () =>
+          $('.errors', @$element).remove()
+      , 5000
+
+
+  formatErrors : (errors) ->
+      $.map errors, (data, field) =>
+          data.join('<br />')
+
   loadViaGET : ->
     showRequest = @ajax()
     showRequest.done (data) => @loadSuccessCallback(data)
